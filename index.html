@@ -62,13 +62,191 @@
     // Add, remove, or change { question: "...", answer: "..." } entries.
     // =============================================================
     const QUESTION_BANK = [
-      { question: "What does CPU stand for?", answer: "Central Processing Unit." },
-      { question: "What is the time complexity of binary search?", answer: "O(log n), assuming sorted input." },
-      { question: "What does RAM stand for?", answer: "Random Access Memory." },
-      { question: "What is a process in an operating system?", answer: "A program that is currently executing." },
-      { question: "What is overfitting in machine learning?", answer: "When a model learns training-specific patterns and performs poorly on new data." },
-      { question: "What does CNN stand for in machine learning?", answer: "Convolutional Neural Network." }
-    ];
+      
+    // ========================================
+    // PROCESSES AND SYSTEM CALLS
+    // ========================================
+
+    { question: "What is a process in Linux?", answer: "A program that is currently executing." },
+    { question: "What is a PID?", answer: "A Process ID, used to identify a process." },
+    { question: "What is a PPID?", answer: "The Process ID of a process's parent." },
+    { question: "What does getpid() return?", answer: "The process ID of the calling process." },
+    { question: "What does getppid() return?", answer: "The process ID of the calling process's parent." },
+    { question: "What does fork() do?", answer: "Creates a child process with its own virtual address space, initially copied from the parent." },
+    { question: "What does fork() return in the child process?", answer: "0." },
+    { question: "What does fork() return in the parent process?", answer: "The PID of the newly created child process." },
+    { question: "What does fork() return if it fails?", answer: "-1. No child process is created." },
+    { question: "How many processes exist after one successful fork()?", answer: "Two: the original parent and one child." },
+    { question: "How many processes exist after three consecutive fork() calls?", answer: "Eight, assuming all fork() calls succeed and every process executes all three calls." },
+    { question: "Where does a child process begin executing after fork()?", answer: "At the instruction immediately following fork()." },
+    { question: "What does exec() do?", answer: "Replaces the current process's program with another program without changing its PID." },
+    { question: "Does a successful exec() return to the original program?", answer: "No. The original program is replaced and execution continues in the new program." },
+    { question: "What happens if exec() fails?", answer: "It returns -1 and execution continues in the original program." },
+    { question: "What is the difference between fork() and exec()?", answer: "fork() creates a new process; exec() replaces the program running in an existing process." },
+    { question: "What happens to the parent when a child calls exec()?", answer: "The parent remains unaffected and can continue executing independently." },
+    { question: "What does wait() do?", answer: "Waits for a child process to terminate and collects its termination status." },
+    { question: "What is the difference between wait() and waitpid()?", answer: "wait() waits for any child; waitpid() can wait for a specific child." },
+    { question: "What does exit(0) indicate?", answer: "The process terminates successfully." },
+    { question: "What does WEXITSTATUS(status) return?", answer: "The exit code of a child that terminated normally." },
+    { question: "What is a zombie process?", answer: "A terminated child whose parent has not yet collected its termination status." },
+    { question: "What is an orphan process?", answer: "A running child whose parent has terminated. It is adopted by another process." },
+    { question: "What is a zombie process?", answer: "A terminated child process whose parent has not yet collected its termination status." },
+    { question: "Why does Linux keep a zombie process?", answer: "To preserve its PID, exit status, and termination information until its parent collects them." },
+    { question: "How can a parent prevent zombie processes?", answer: "Call wait() or waitpid() to collect terminated children's statuses." },
+    { question: "Does a zombie process consume CPU time?", answer: "No. It has finished executing and only retains limited kernel bookkeeping information." },
+    { question: "How can zombie processes be identified in Linux?", answer: "They appear with state Z in tools such as ps." },
+    { question: "What is the key difference between an orphan and a zombie?", answer: "An orphan is still running but has lost its parent; a zombie has terminated but has not been reaped." },
+    { question: "What is an orphan process?", answer: "A child process whose parent has terminated while the child is still running." },
+    { question: "What happens to an orphan process in Linux?", answer: "It is reparented to another process, typically PID 1 or a designated subreaper." },
+    { question: "Does an orphan process automatically terminate?", answer: "No. It can continue running normally after its parent terminates." },
+    { question: "What happens to getppid() when a process becomes orphaned?", answer: "It changes to the PID of the process that adopts the orphan." },
+    { question: "How can a program create an orphan process?", answer: "Call fork(), terminate the parent, and let the child continue running." },
+    { question: "What does mmap() do in Linux?", answer: "Maps a file or memory region into a process's virtual address space." },
+    { question: "How can mmap() be used for IPC?", answer: "By mapping the same shared memory region into multiple processes." },
+    { question: "What is the difference between MAP_SHARED and MAP_PRIVATE?", answer: "MAP_SHARED allows shared modifications; MAP_PRIVATE uses copy-on-write for private modifications." },
+    { question: "What does MAP_ANONYMOUS mean in mmap()?", answer: "Creates a memory mapping not backed by a file." },
+    { question: "How can a parent and child share memory using mmap()?", answer: "Create a MAP_SHARED mapping before fork(). Both processes inherit access to the same memory." },
+    { question: "What does munmap() do?", answer: "Removes a memory mapping from the calling process's address space." },
+    { question: "What is an advantage of shared memory over pipes?", answer: "Processes can access shared data directly without copying every transfer through a pipe." },
+
+    // ========================================
+    // PROCESS MEMORY
+    // ========================================
+
+    { question: "Do parent and child processes share ordinary global variables after fork()?", answer: "No. They have logically separate copies of the variables." },
+    { question: "What happens if a child modifies a global variable after fork()?", answer: "Only the child's value changes. The parent's value remains unchanged." },
+    { question: "What is Copy-on-Write (CoW)?", answer: "A technique that initially shares physical memory pages and creates private copies when they are modified." },
+    { question: "Can parent and child variables have the same virtual address?", answer: "Yes. Identical virtual addresses can refer to different physical memory after Copy-on-Write." },
+    { question: "What is the difference between virtual and physical memory addresses?", answer: "Virtual addresses are used by processes; physical addresses identify locations in physical memory." },
+    { question: "What is shared memory IPC?", answer: "A mechanism allowing multiple processes to access the same underlying memory region." },
+
+    // ========================================
+    // INTER-PROCESS COMMUNICATION
+    // ========================================
+
+    { question: "What does IPC stand for?", answer: "Inter-Process Communication." },
+    { question: "Why is IPC needed?", answer: "Processes normally have isolated address spaces and need mechanisms to exchange data or coordinate." },
+    { question: "What are the two main IPC approaches?", answer: "Message passing and shared memory." },
+    { question: "What is a pipe in Linux?", answer: "A kernel-managed byte stream that transfers data between processes." },
+    { question: "Is an ordinary Linux pipe unidirectional?", answer: "Yes. Data flows from its write end to its read end." },
+    { question: "What does pipe(fd) create?", answer: "A pipe and two file descriptors: fd[0] for reading and fd[1] for writing." },
+    { question: "What is stored in the array passed to pipe()?", answer: "Two file descriptors, not the actual pipe buffer." },
+    { question: "Where is a pipe's buffer stored?", answer: "In memory managed by the Linux kernel." },
+    { question: "What does write(fd[1], &byte, 1) do?", answer: "Writes one byte from the process's memory into the pipe." },
+    { question: "What does read(fd[0], &byte, 1) do?", answer: "Reads up to one byte from the pipe into the process's memory." },
+    { question: "What happens when read() is called on an empty pipe?", answer: "A blocking read waits until data arrives or all write ends close." },
+    { question: "What happens when write() is called on a full pipe?", answer: "A blocking write waits until sufficient buffer space becomes available." },
+    { question: "Does write() normally wait until the receiver reads the data?", answer: "No. It can return once the data has been accepted into the pipe buffer." },
+    { question: "What happens when read() reaches an empty pipe with no writers?", answer: "It returns 0, indicating end-of-file (EOF)." },
+    { question: "What happens when writing to a pipe with no readers?", answer: "The process normally receives SIGPIPE; write() may fail with EPIPE." },
+    { question: "Why might read() dominate measured syscall time in a pipe experiment?", answer: "It may spend substantial time blocked while waiting for another process to write data." },
+    { question: "Does a read() or write() call always cause a context switch?", answer: "No. A context switch may occur if the call blocks or the scheduler preempts the task." },
+    { question: "What do p2c and c2p represent in a two-pipe program?", answer: "Two independent pipes: parent-to-child and child-to-parent." },
+    { question: "Do ordinary pipes require a parent-child relationship?", answer: "No. Processes only need access to the same pipe descriptors, commonly inherited through fork()." },
+    { question: "What is a FIFO (named pipe)?", answer: "A pipe accessible through a filesystem path, allowing unrelated processes to communicate." },
+    { question: "What is the difference between a pipe and a FIFO?", answer: "An ordinary pipe uses shared file descriptors; a FIFO can be opened through a filesystem path." },
+    { question: "What is a race condition?", answer: "A situation where the result depends on the timing or interleaving of concurrent operations." },
+    { question: "What is a critical section?", answer: "A section of code accessing shared resources that must be protected against conflicting concurrent access." },
+    { question: "What is a semaphore used for?", answer: "Controlling access to shared resources and synchronizing execution." },
+    { question: "What is a mutex?", answer: "A mutual-exclusion lock that allows one owner at a time to enter a protected critical section." },
+    { question: "What are signals used for in Linux?", answer: "Notifying processes about events, such as termination requests or child state changes." },
+    { question: "What are sockets used for?", answer: "Communication between processes on the same computer or across a network." },
+
+    // ========================================
+    // PROCESS SCHEDULING
+    // ========================================
+
+    { question: "What is process scheduling?", answer: "The operating system deciding which runnable task gets CPU time and when." },
+    { question: "What are the five basic process states?", answer: "New, Ready, Running, Waiting/Blocked, and Terminated." },
+    { question: "What does the Ready state mean?", answer: "The process can execute but is waiting for CPU time." },
+    { question: "What does the Waiting/Blocked state mean?", answer: "The process cannot continue until an event occurs, such as I/O completion." },
+    { question: "What does preemption mean?", answer: "Interrupting a running task so another task can use the CPU." },
+    { question: "What process-state transition occurs during preemption?", answer: "Running → Ready." },
+    { question: "What is the difference between preemptive and non-preemptive scheduling?", answer: "Preemptive scheduling can interrupt a running task; non-preemptive scheduling waits until it yields or finishes." },
+    { question: "What does FCFS stand for?", answer: "First-Come, First-Served." },
+    { question: "How does FCFS scheduling work?", answer: "Processes execute in arrival order, without preemption." },
+    { question: "What is the convoy effect in FCFS?", answer: "Short tasks suffer long waiting times because they are queued behind long tasks." },
+    { question: "What does SJF stand for?", answer: "Shortest Job First." },
+    { question: "How does SJF scheduling work?", answer: "The process with the shortest expected CPU burst is selected first." },
+    { question: "What is a disadvantage of SJF scheduling?", answer: "Exact future CPU burst lengths are generally unknown, and long jobs may starve." },
+    { question: "What does SRTF stand for?", answer: "Shortest Remaining Time First, the preemptive version of SJF." },
+    { question: "How does Round Robin scheduling work?", answer: "Each runnable process receives up to one time quantum before rotating to another ready process." },
+    { question: "What does q represent in Round Robin?", answer: "The time quantum: the maximum uninterrupted CPU interval allocated before quantum-based preemption." },
+    { question: "What happens when a Round Robin time quantum expires?", answer: "If the task is still runnable and others are waiting, it is preempted and returned to the ready queue." },
+    { question: "What happens if the Round Robin quantum is too small?", answer: "Frequent context switches increase scheduling overhead." },
+    { question: "What happens if the Round Robin quantum is very large?", answer: "Round Robin behaves more like FCFS, potentially reducing responsiveness." },
+    { question: "What does choosing q above 80% of CPU bursts mean?", answer: "Choose q around the 80th percentile so approximately 80% of bursts finish within one quantum." },
+    { question: "What is a CPU burst?", answer: "A period of CPU execution between blocking events or termination, possibly interrupted by preemption." },
+    { question: "Is CPU burst time the same as waiting time?", answer: "No. CPU burst time is required execution time; waiting time is time spent ready but not running." },
+    { question: "What is a CPU-bound process?", answer: "A process that spends most of its time performing computations." },
+    { question: "What is an I/O-bound process?", answer: "A process that frequently waits for input/output operations." },
+    { question: "What is turnaround time?", answer: "Completion time minus arrival time." },
+    { question: "What is response time?", answer: "Time from arrival until the process first receives CPU time." },
+    { question: "What is waiting time in CPU scheduling?", answer: "The total time a process spends in the ready queue." },
+
+    // ========================================
+    // CPU BURST PREDICTION
+    // ========================================
+
+    { question: "Why do scheduling algorithms predict CPU burst lengths?", answer: "The scheduler generally does not know how long the next CPU burst will last." },
+    { question: "What is the exponential CPU burst prediction formula?", answer: "τ(n+1) = α × t(n) + (1 − α) × τ(n)." },
+    { question: "What does α represent in exponential burst prediction?", answer: "The weight assigned to the most recent actual CPU burst." },
+    { question: "How should α change to emphasize more recent CPU bursts?", answer: "Increase α toward 1." },
+    { question: "What happens when α = 1 in CPU burst prediction?", answer: "The next prediction equals the most recent actual CPU burst." },
+    { question: "What happens when α = 0 in CPU burst prediction?", answer: "The prediction remains equal to the previous prediction, ignoring new observations." },
+    { question: "Why is exponential averaging called exponential?", answer: "The weights assigned to older observations decrease exponentially." },
+
+    // ========================================
+    // CONTEXT SWITCHING AND THREADS
+    // ========================================
+
+    { question: "What is a context switch?", answer: "Saving one task's execution state and restoring another task's state so it can run." },
+    { question: "What information is saved during a context switch?", answer: "CPU registers, instruction pointer, stack pointer, and other execution state." },
+    { question: "What is a PCB?", answer: "Process Control Block, the OS data structure containing information needed to manage a process." },
+    { question: "What is the Linux equivalent of a PCB?", answer: "Primarily the task_struct kernel structure, together with associated structures." },
+    { question: "What is the difference between process switching and thread switching?", answer: "Switching between processes typically changes address spaces; switching between threads of one process does not." },
+    { question: "Why is switching between threads of one process generally cheaper?", answer: "The threads share an address space, so switching memory mappings is unnecessary." },
+    { question: "Do threads within the same process share global variables?", answer: "Yes. They share the process's address space, including its global variables." },
+    { question: "Do threads within the same process have separate stacks?", answer: "Yes. Each thread has its own stack and CPU execution context." },
+    { question: "What does pthread_create() do?", answer: "Creates a new POSIX thread in the calling process." },
+    { question: "What does pthread_join() do?", answer: "Waits for a specified thread to terminate." },
+    { question: "What happens when a child creates a thread that changes a global variable?", answer: "The change is visible within the child process, but not to its parent process." },
+    { question: "What does gettid() return in Linux?", answer: "The numeric kernel thread ID (TID) of the calling thread." },
+    { question: "Do all threads within a process have the same getpid() value?", answer: "Yes. They share a thread-group ID, which getpid() returns." },
+    { question: "Do all threads within a process have the same gettid() value?", answer: "No. Each thread has its own kernel TID." },
+    { question: "What does pthread_self() return?", answer: "The POSIX thread identifier (pthread_t) of the calling thread." },
+    { question: "How should two pthread_t values be compared?", answer: "Using pthread_equal(), not == for portable POSIX code." },
+    { question: "Can kernel thread IDs returned by gettid() be compared with ==?", answer: "Yes. They are numeric identifiers of type pid_t." },
+
+    // ========================================
+    // LINUX KERNEL MODULES AND STRACE
+    // ========================================
+
+    { question: "What is a Linux kernel module?", answer: "Code that can be dynamically loaded into or removed from the running Linux kernel." },
+    { question: "What is the difference between user space and kernel space?", answer: "User space runs ordinary programs with restricted access; kernel space runs privileged operating-system code." },
+    { question: "What does task_struct contain?", answer: "Kernel information about a task, including scheduling state, identifiers, and context-switch counters." },
+    { question: "What does nvcsw represent?", answer: "The number of voluntary context switches experienced by a Linux task." },
+    { question: "What does nivcsw represent?", answer: "The number of involuntary context switches experienced by a Linux task." },
+    { question: "What typically causes a voluntary context switch?", answer: "A task blocking, for example while waiting for data from an empty pipe." },
+    { question: "What typically causes an involuntary context switch?", answer: "The scheduler preempting a runnable task to execute another task." },
+    { question: "What does module_init() specify?", answer: "The function executed when a kernel module is loaded." },
+    { question: "What does module_exit() specify?", answer: "The function executed when a kernel module is unloaded." },
+    { question: "What is the purpose of /proc/csprobe?", answer: "A virtual file exposing the selected task's context-switch counters through the csprobe module." },
+    { question: "What does module_param(target_pid, int, 0644) do?", answer: "Exposes an integer kernel-module parameter that can be read and changed with appropriate permissions." },
+    { question: "How do you compile a kernel module with a prepared Makefile?", answer: "Run make in the module's directory." },
+    { question: "What file extension identifies a compiled Linux kernel module?", answer: ".ko (kernel object)." },
+    { question: "How do you load the csprobe kernel module?", answer: "sudo insmod csprobe.ko" },
+    { question: "How do you unload the csprobe kernel module?", answer: "sudo rmmod csprobe" },
+    { question: "How do you view the loaded csprobe module's output?", answer: "cat /proc/csprobe" },
+    { question: "How can context-switch counts be inspected without a custom module?", answer: "Read voluntary_ctxt_switches and nonvoluntary_ctxt_switches from /proc/<pid>/status." },
+    { question: "What does strace do?", answer: "Traces system calls and signals made by a Linux program." },
+    { question: "What does strace -f do?", answer: "Follows child processes and threads created by the traced program." },
+    { question: "What does strace -c do?", answer: "Prints a summary of traced syscall counts, timings, and errors." },
+    { question: "What does strace -e trace=read,write do?", answer: "Filters the trace to read() and write() system calls." },
+    { question: "How do you summarize read/write syscalls including child processes?", answer: "strace -f -c -e trace=read,write ./q7" },
+    { question: "Does high syscall time in strace necessarily mean high CPU usage?", answer: "No. Syscall time can include time spent blocked or waiting for scheduling." }
+  ];
+
     // =============================================================
 
     const card = document.getElementById('card');
