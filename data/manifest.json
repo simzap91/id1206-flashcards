@@ -1,0 +1,112 @@
+[
+  {
+    "file": "1-Intro-OS-1.pdf",
+    "bytes": 2477547,
+    "sha256": "5566b937e0fd626ca6a03e6f56394f7737100ad158adb85a0c8d4da2f0b265b4"
+  },
+  {
+    "file": "1.1-process-IPC.pdf",
+    "bytes": 2627445,
+    "sha256": "ee7dd46bd60ef4c3517eb9c94d718b51fe8befc1e20321b1b8c35ad1b415e8a5"
+  },
+  {
+    "file": "1.3-scheduling.pdf",
+    "bytes": 1464121,
+    "sha256": "15b2ae9a3bfba5f6f3e0bb310a142eecb16c6f0e39836048518bb71b842c5023"
+  },
+  {
+    "file": "2.1-memory-1.pdf",
+    "bytes": 1732109,
+    "sha256": "0ac9b6956f766ffa608c7d413418ae2f41e2d091f2978ea181a7f3b3cb389aaa"
+  },
+  {
+    "file": "2.2-vm-1.pdf",
+    "bytes": 2018063,
+    "sha256": "8c97ec83b395b14e1a1aa7885853a42aad8171f05d849874d4fbae0fb2c4c995"
+  },
+  {
+    "file": "2.3-demand-paging.pdf",
+    "bytes": 1156945,
+    "sha256": "f43b165f27beb324e4fce0f044c9228c069eed51d66814bf0c0cb4fd96b4cfd2"
+  },
+  {
+    "file": "3.1-thread-1.pdf",
+    "bytes": 1423425,
+    "sha256": "6f18c62fa4a5452cc0fde3434eec1a2923853f75ce66ad50de689e17422547bd"
+  },
+  {
+    "file": "ID1206 - sammaställning.pdf",
+    "bytes": 98462,
+    "sha256": "c3aa8e300e4ff929a9fb902509320a6b90807a8641307835a778e77ebcaee7b0"
+  },
+  {
+    "file": "image.png",
+    "bytes": 70629,
+    "sha256": "6fe48ce407bf1af3823baaddff616b91943561f3a886e52f3713728ae042bcff"
+  },
+  {
+    "file": "image1.png",
+    "bytes": 71400,
+    "sha256": "79f001de79b705d4d32bdeb1a40b57a18988af3172c03f403428350299d9ee7b"
+  },
+  {
+    "file": "image3.png",
+    "bytes": 29552,
+    "sha256": "9777309f624b313d9a7c50fab455ff76e7a0d911bc490d70e9d340f014b6312d"
+  },
+  {
+    "file": "Sammanställning.pdf",
+    "bytes": 760985,
+    "sha256": "a79274b610f179ee04941ceb3e4e2191fc7b163a93141df86c41db922c759a3e"
+  },
+  {
+    "file": "Skarmavbild_2026-11-09_kl._11.59.44.png",
+    "bytes": 110015,
+    "sha256": "9b6604506e77f65bb954f257c04e1070b50992099e507f9d3b81e4900af64f9b"
+  },
+  {
+    "file": "Skarmavbild_2026-11-09_kl._11.59.58.png",
+    "bytes": 85476,
+    "sha256": "2a882e0acd0e0b30c69430e6d069f5ab8c4fe6dd71214e5511b7b1377c608cc6"
+  },
+  {
+    "file": "Skarmavbild_2026-11-09_kl._12.00.04.png",
+    "bytes": 98593,
+    "sha256": "6175aa60efea5e2f814889bd67564b1a60ee36322e2f2fa59be940b6dc73392f"
+  },
+  {
+    "file": "Skarmavbild_2026-11-09_kl._12.00.11.png",
+    "bytes": 109067,
+    "sha256": "ce0762ad21551a700105b28f04e3e1d406a1c3363d69304607f48448d2cb67dd"
+  },
+  {
+    "file": "Skarmavbild_2026-11-09_kl._12.00.16.png",
+    "bytes": 200699,
+    "sha256": "23e5117fffcb49a16c193d57bf40b10afa6db27d0235db8c74e123ae553b6fac"
+  },
+  {
+    "file": "Skarmavbild_2026-11-09_kl._12.00.24.png",
+    "bytes": 188248,
+    "sha256": "36fcf6efc51de823d7e0873a95bc4a1e593df643f83492310263a0ad01d6c7f7"
+  },
+  {
+    "file": "Skarmavbild_2026-11-12_kl._12.59.55.png",
+    "bytes": 115841,
+    "sha256": "02f9b6cae52338481de6fad31da39b3a7b4fa6cfc8f58f05c84226066b5a2bfc"
+  },
+  {
+    "file": "Skarmavbild_2026-11-12_kl._13.00.03.png",
+    "bytes": 126228,
+    "sha256": "38549310be446ef7698d5c3cbebf4e047d03f224dbccb10fabdec9fb969cd829"
+  },
+  {
+    "file": "Skarmavbild_2026-11-12_kl._13.00.09.png",
+    "bytes": 130681,
+    "sha256": "a7f6ce3fdf1a80bc52e0f4d8dad6f80ede3d9ce012ffce1764628d0c86f07c88"
+  },
+  {
+    "file": "Skarmavbild_2026-11-12_kl._13.00.13.png",
+    "bytes": 41560,
+    "sha256": "3b57e9bd48fab08b044f0de1dc20213775b8340d84c36c50679e81b8b17f2d77"
+  }
+]

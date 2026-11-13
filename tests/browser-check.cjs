@@ -27,22 +27,47 @@ const data = require('../study-data.js');
   async function select(indices) {
     for (const index of indices) await page.locator(`#options input[value="${index}"]`).check();
   }
+  async function chooseTopics(ids = null) {
+    if (!await page.locator('#topicPicker').evaluate(el => el.open)) await page.locator('#topicSummary').click();
+    await page.locator('#clearTopics').click();
+    if (ids === null) await page.locator('#selectAllTopics').click();
+    else for (const id of ids) await page.locator(`#topicOptions input[value="${id}"]`).check();
+    await page.locator('#topicSummary').click();
+  }
   try {
     await page.goto(url);
     await page.locator('#cardText').waitFor();
     assert.match(await page.title(), /ID1206/);
     assert.equal(await page.locator('#flashCount').textContent(), '120');
     assert.equal(await page.locator('#quizCount').textContent(), '74');
+    assert.equal(await page.locator('#previousCardButton').isDisabled(), true);
     const firstCard = await page.locator('#cardText').textContent();
     await page.locator('#card').click();
     assert.equal(await page.locator('#sideLabel').textContent(), 'Answer');
     assert.equal(await visible('#flashSource'), true);
+    const firstAnswer = await page.locator('#cardText').textContent();
+    const sourceHref = await page.locator('#flashSource a').first().getAttribute('href');
+    assert.match(sourceHref, /^data\/.*\.pdf#page=\d+$/);
+    const popupPromise = page.context().waitForEvent('page');
+    await page.locator('#flashSource a').first().click();
+    const pdf = await popupPromise;
+    await pdf.waitForURL(url => url.href.includes(sourceHref));
+    assert.equal(await page.locator('#cardText').textContent(), firstAnswer, 'Opening source retains study state');
+    await pdf.close();
+    await page.locator('#card').focus();
     await page.keyboard.press('Space');
     assert.equal(await page.locator('#sideLabel').textContent(), 'Question');
+    await page.keyboard.press('Space');
     await page.keyboard.press('ArrowRight');
     assert.match(await page.locator('#roundProgress').textContent(), /Card 2 of 120/);
     assert.notEqual(await page.locator('#cardText').textContent(), firstCard);
     const preservedCard = await page.locator('#cardText').textContent();
+    await page.locator('#previousCardButton').click();
+    assert.equal(await page.locator('#cardText').textContent(), firstAnswer);
+    assert.equal(await visible('#flashSource'), true);
+    assert.equal(await page.locator('#previousCardButton').isDisabled(), true);
+    await page.keyboard.press('ArrowRight');
+    assert.equal(await page.locator('#cardText').textContent(), preservedCard);
     await page.locator('#quizMode').click();
     assert.equal(await visible('#quizPanel'), true);
     assert.equal(await visible('#typeFilterLabel'), true);
@@ -62,25 +87,53 @@ const data = require('../study-data.js');
     await page.locator('#quizMode').click();
     assert.equal(await page.locator('#quizQuestion').textContent(), questionText);
     assert.equal(await page.locator('#options input:checked').getAttribute('value'), selected);
+    const firstQuiz = await current();
+    await select(firstQuiz.correct);
+    await page.locator('#checkButton').click();
+    const firstOptions = await page.locator('#options input').evaluateAll(inputs => inputs.map(input => input.value));
+    await page.locator('#nextQuizButton').click();
+    const secondQuiz = await current();
+    await select(secondQuiz.correct);
+    await page.locator('#previousQuizButton').click();
+    assert.equal((await current()).id, firstQuiz.id);
+    assert.equal(await page.locator('#feedbackTitle').textContent(), 'Correct');
+    assert.deepEqual(await page.locator('#options input').evaluateAll(inputs => inputs.map(input => input.value)), firstOptions);
+    assert.match(await page.locator('#roundProgress').textContent(), /1\/1 correct/);
+    await page.locator('#nextQuizButton').click();
+    assert.equal((await current()).id, secondQuiz.id);
+    assert.deepEqual(await page.locator('#options input:checked').evaluateAll(inputs => inputs.map(input => Number(input.value))), secondQuiz.correct);
+    assert.equal(await visible('#feedback'), false);
+
+    // Combining topics returns their union in both practice modes.
+    await chooseTopics(['vm', 'memory']);
+    await page.locator('#typeFilter').selectOption('all');
+    assert.equal(await page.locator('#topicSummaryText').textContent(), '2 topics selected');
+    assert.equal(await page.locator('#quizCount').textContent(), '18');
+    await page.locator('#flashMode').click();
+    assert.equal(await page.locator('#flashCount').textContent(), '32');
+    await chooseTopics([]);
+    assert.equal(await visible('#emptyPanel'), true);
+    await page.locator('#resetFilters').click();
+    await page.locator('#quizMode').click();
 
     // Topic/level/type filters compose, including empty selections and recovery.
-    await page.locator('#topicFilter').selectOption('os');
+    await chooseTopics(['os']);
     await page.locator('#difficultyFilter').selectOption('application');
     await page.locator('#typeFilter').selectOption('multiple');
     assert.equal(await visible('#emptyPanel'), true);
     assert.equal(await visible('#quizPanel'), false);
     await page.locator('#resetFilters').click();
     assert.equal(await visible('#quizPanel'), true);
-    await page.locator('#topicFilter').selectOption('scheduling');
+    await chooseTopics(['scheduling']);
     await page.locator('#difficultyFilter').selectOption('application');
     await page.locator('#typeFilter').selectOption('single');
     assert.equal((await current()).difficulty, 'application');
     assert.equal((await current()).topic, 'scheduling');
-    await page.locator('#topicFilter').focus();
+    await page.locator('#topicSummary').focus();
     await page.keyboard.press('Space');
     await page.keyboard.press('Escape');
     assert.equal(await visible('#quizPanel'), true);
-    await page.locator('#topicFilter').selectOption('all');
+    await chooseTopics();
     await page.locator('#difficultyFilter').selectOption('all');
     await page.locator('#typeFilter').selectOption('all');
 
@@ -131,6 +184,16 @@ const data = require('../study-data.js');
     assert.equal(await page.locator('#summaryTitle').textContent(), '71 / 74 correct · 96%');
     assert.equal(await page.locator('.topic-result').count(), 8);
     assert.match(await page.locator('#summaryText').textContent(), /73 answered · 1 skipped/);
+    const lastQuiz = await current();
+    await page.locator('#backToLastButton').click();
+    assert.equal((await current()).id, lastQuiz.id);
+    assert.equal(await visible('#feedback'), true);
+    await page.keyboard.press('ArrowLeft');
+    assert.notEqual((await current()).id, lastQuiz.id);
+    await page.keyboard.press('ArrowRight');
+    assert.equal((await current()).id, lastQuiz.id);
+    await page.locator('#nextQuizButton').click();
+    assert.equal(await page.locator('#summaryTitle').textContent(), '71 / 74 correct · 96%');
     await screenshot('quiz-results-desktop');
     await page.locator('#retryButton').click();
     for (let i = 0; i < missed.size; i++) {
@@ -160,7 +223,7 @@ const data = require('../study-data.js');
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
     await screenshot('quiz-feedback-mobile');
     await page.locator('#flashMode').click();
-    await page.locator('#topicFilter').selectOption('threads');
+    await chooseTopics(['threads']);
     await page.locator('#difficultyFilter').selectOption('application');
     const cardCount = Number(await page.locator('#flashCount').textContent());
     for (let i = 0; i < cardCount; i++) {
@@ -170,14 +233,21 @@ const data = require('../study-data.js');
     }
     assert.equal(await visible('#summaryPanel'), true);
     assert.match(await page.locator('#summaryTitle').textContent(), /flashcards practiced/);
+    await page.locator('#backToLastButton').click();
+    assert.equal(await page.locator('#sideLabel').textContent(), 'Answer');
+    await page.locator('#nextCardButton').click();
     await page.locator('#againButton').click();
-    await page.locator('#topicFilter').selectOption('all');
+    await chooseTopics();
     await page.locator('#difficultyFilter').selectOption('all');
     await screenshot('flashcards-mobile');
+    await page.locator('#topicSummary').click();
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+    await screenshot('topic-picker-mobile');
+    await page.keyboard.press('Escape');
     await page.setViewportSize({ width: 1200, height: 1000 });
     await screenshot('flashcards-desktop');
     assert.deepEqual(errors, []);
-    console.log('Browser checks passed: all 74 quizzes; exact-set scoring; radio/checkbox state; filters; summaries/retry; all flash application cards in Threads; keyboard; mobile layout; no runtime errors.');
+    console.log('Browser checks passed: all 74 quizzes; backward navigation and restored selections/grades; multiple topics; PDF source popup; exact-set scoring; summaries/retry; keyboard; mobile layout; no runtime errors.');
   } finally {
     await browser.close();
   }

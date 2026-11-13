@@ -2,6 +2,9 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const data = require('../study-data.js');
 const core = require('../study-core.js');
+const fs = require('node:fs');
+const path = require('node:path');
+const { createHash } = require('node:crypto');
 
 test('all study entries have unique IDs, supported topics, difficulty and valid PDF references', () => {
   const all = [...data.flashcards, ...data.quizzes];
@@ -36,10 +39,10 @@ test('every quiz has a coherent answer key and explanation', () => {
 test('all topics support both levels and both quiz types', () => {
   for (const topic of data.topics) {
     for (const difficulty of ['foundation', 'application']) {
-      assert.ok(core.filterBank(data.flashcards, { topic: topic.id, difficulty }).length, topic.id);
-      assert.ok(core.filterBank(data.quizzes, { topic: topic.id, difficulty }).length, topic.id);
+      assert.ok(core.filterBank(data.flashcards, { topics: [topic.id], difficulty }).length, topic.id);
+      assert.ok(core.filterBank(data.quizzes, { topics: [topic.id], difficulty }).length, topic.id);
     }
-    for (const type of ['single', 'multiple']) assert.ok(core.filterBank(data.quizzes, { topic: topic.id, type }).length);
+    for (const type of ['single', 'multiple']) assert.ok(core.filterBank(data.quizzes, { topics: [topic.id], type }).length);
   }
 });
 test('shuffle does not mutate its input or lose, duplicate or invent entries', () => {
@@ -63,8 +66,70 @@ test('one response per question is recorded, including skipped questions', () =>
   assert.equal(skipped.responses[0].skipped, true);
 });
 test('filters compose and unsupported combinations return an empty list', () => {
-  const filtered = core.filterBank(data.quizzes, { topic: 'scheduling', difficulty: 'application', type: 'single' });
+  const filtered = core.filterBank(data.quizzes, { topics: ['scheduling'], difficulty: 'application', type: 'single' });
   assert.ok(filtered.length > 0);
   assert.ok(filtered.every(q => q.topic === 'scheduling' && q.difficulty === 'application' && q.type === 'single'));
-  assert.equal(core.filterBank(data.quizzes, { topic: 'missing-topic' }).length, 0);
+  assert.equal(core.filterBank(data.quizzes, { topics: ['missing-topic'] }).length, 0);
+});
+test('multiple topics are combined as a union and an empty selection returns no questions', () => {
+  const filtered = core.filterBank(data.flashcards, { topics: ['vm', 'memory'] });
+  assert.equal(filtered.length, 32);
+  assert.ok(filtered.every(q => ['vm', 'memory'].includes(q.topic)));
+  assert.equal(core.filterBank(data.quizzes, { topics: [] }).length, 0);
+  assert.equal(core.filterBank(data.quizzes).length, data.quizzes.length);
+  const foundation = core.filterBank(data.quizzes, { topics: ['vm', 'memory'], difficulty: 'foundation', type: 'multiple' });
+  assert.ok(foundation.length);
+  assert.ok(foundation.every(q => ['vm', 'memory'].includes(q.topic) && q.type === 'multiple' && q.difficulty === 'foundation'));
+});
+test('navigation preserves question state, answer order and grade without duplicate scoring', () => {
+  const round = core.createRound(data.quizzes.slice(0, 2));
+  assert.equal(core.moveRound(round, -1), false);
+  const question = round.questions[0];
+  const firstState = core.currentState(round);
+  const options = firstState.options;
+  core.recordResponse(round, question.correct);
+  core.moveRound(round, 1);
+  const second = core.currentState(round);
+  second.selected = [1];
+  core.moveRound(round, -1);
+  assert.equal(core.currentState(round), firstState);
+  assert.equal(core.currentState(round).options, options);
+  assert.equal(core.currentState(round).submitted, true);
+  assert.equal(core.recordResponse(round, []), false);
+  assert.equal(round.responses.length, 1);
+  core.moveRound(round, 1);
+  assert.deepEqual(core.currentState(round).selected, [1]);
+  core.moveRound(round, 1);
+  assert.equal(round.position, round.questions.length);
+  assert.equal(core.moveRound(round, 1), false);
+  core.moveRound(round, -1);
+  assert.equal(core.currentState(round), second);
+  const flash = core.createRound(data.flashcards.slice(0, 2));
+  core.currentState(flash).showingAnswer = true;
+  core.moveRound(flash, 1);
+  assert.equal(core.currentState(flash).showingAnswer, false);
+  core.moveRound(flash, -1);
+  assert.equal(core.currentState(flash).showingAnswer, true);
+});
+test('every linked source exists, and links identify the exact one-based PDF pages', () => {
+  for (const q of [...data.flashcards, ...data.quizzes]) {
+    const links = core.sourceLinks(q, data.sources);
+    assert.equal(links.length, q.pages.length);
+    links.forEach((link, index) => {
+      const [file, hash] = link.href.split('#');
+      assert.equal(hash, `page=${q.pages[index]}`);
+      const absolute = path.resolve(__dirname, '..', decodeURIComponent(file));
+      assert.equal(fs.readFileSync(absolute).subarray(0, 4).toString(), '%PDF');
+    });
+  }
+});
+test('all 22 migrated course files match their original SHA-256 hashes', () => {
+  const manifestPath = path.resolve(__dirname, '../data/manifest.json');
+  const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8').replace(/^\uFEFF/, ''));
+  assert.equal(manifest.length, 22);
+  for (const item of manifest) {
+    const bytes = fs.readFileSync(path.resolve(__dirname, '../data', item.file));
+    assert.equal(bytes.length, item.bytes, item.file);
+    assert.equal(createHash('sha256').update(bytes).digest('hex'), item.sha256, item.file);
+  }
 });

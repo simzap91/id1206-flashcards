@@ -22,7 +22,7 @@
       <button type="button" id="quizMode" aria-pressed="false">Quiz <span id="quizCount"></span></button>
     </nav>
     <section class="filters" aria-label="Practice filters">
-      <label>Topic<select id="topicFilter"><option value="all">All topics</option></select></label>
+      <div class="filter topic-filter"><span id="topicLabel">Topics</span><details id="topicPicker" class="topic-picker"><summary id="topicSummary" aria-labelledby="topicLabel topicSummaryText"><span id="topicSummaryText">All topics</span></summary><div class="topic-menu"><div class="topic-actions"><button id="selectAllTopics" type="button" class="text-button">Select all</button><button id="clearTopics" type="button" class="text-button">Clear</button></div><fieldset id="topicOptions"><legend class="sr-only">Choose one or more topics</legend></fieldset></div></details></div>
       <label>Difficulty<select id="difficultyFilter"><option value="all">All levels</option><option value="foundation">Foundation</option><option value="application">Application</option></select></label>
       <label id="typeFilterLabel" hidden>Question type<select id="typeFilter"><option value="all">Mixed</option><option value="single">Single answer</option><option value="multiple">Multiple answers</option></select></label>
     </section>
@@ -33,23 +33,23 @@
         <span id="cardMeta" class="meta"></span><span id="sideLabel" class="eyebrow">Question</span><span id="cardText" class="content"></span><span id="cardHint" class="hint">Click to reveal the answer</span>
       </button>
       <p id="flashSource" class="source" hidden></p>
-      <div class="controls"><button id="flipButton" class="secondary" type="button">Show answer</button><button id="nextCardButton" class="primary" type="button">Next card →</button></div>
-      <p class="keyboard-hint"><kbd>Space</kbd> to flip · <kbd>→</kbd> for next card</p>
+      <div class="controls"><button id="previousCardButton" class="secondary" type="button">← Previous</button><button id="flipButton" class="secondary" type="button">Show answer</button><button id="nextCardButton" class="primary" type="button">Next card →</button></div>
+      <p class="keyboard-hint"><kbd>Space</kbd> to flip · <kbd>←</kbd> / <kbd>→</kbd> to navigate</p>
     </section>
     <section id="quizPanel" aria-label="Quiz practice" hidden>
       <form id="quizForm" class="quiz-card">
         <div class="quiz-top"><span id="quizMeta" class="meta"></span><span id="quizType" class="question-type"></span></div>
         <fieldset id="quizFieldset"><legend id="quizQuestion"></legend><p id="selectionHint" class="hint"></p><div id="options" class="options"></div></fieldset>
         <div id="feedback" class="feedback" role="status" hidden><strong id="feedbackTitle"></strong><p id="explanation"></p><p id="quizSource" class="source"></p></div>
-        <div class="controls"><button id="skipButton" class="secondary" type="button">Skip</button><button id="checkButton" class="primary" type="submit" disabled>Check answer</button><button id="nextQuizButton" class="primary" type="button" hidden>Next question →</button></div>
+        <div class="controls"><button id="previousQuizButton" class="secondary" type="button">← Previous</button><button id="skipButton" class="secondary" type="button">Skip</button><button id="checkButton" class="primary" type="submit" disabled>Check answer</button><button id="nextQuizButton" class="primary" type="button" hidden>Next question →</button></div>
       </form>
-      <p class="keyboard-hint">Choose your answer, then check it. Multiple-answer questions require every correct option.</p>
+      <p class="keyboard-hint">Multiple-answer questions require every correct option. Use <kbd>←</kbd> to go back and <kbd>→</kbd> to continue after checking.</p>
     </section>
     <section id="summaryPanel" class="summary-card" aria-labelledby="summaryTitle" hidden>
-      <span class="eyebrow">Round complete</span><h2 id="summaryTitle" tabindex="-1"></h2><p id="summaryText"></p><div id="resultTopics"></div><div class="controls"><button id="retryButton" class="secondary" type="button" hidden>Retry missed questions</button><button id="againButton" class="primary" type="button">Practice again</button></div>
+      <span class="eyebrow">Round complete</span><h2 id="summaryTitle" tabindex="-1"></h2><p id="summaryText"></p><div id="resultTopics"></div><div class="controls"><button id="retryButton" class="secondary" type="button" hidden>Retry missed questions</button><button id="againButton" class="primary" type="button">Practice again</button></div><button id="backToLastButton" class="text-button back-to-last" type="button">← Back to last question</button>
     </section>
-    <section id="emptyPanel" class="summary-card" hidden><h2>No questions in this selection</h2><p>Choose another topic, level, or question type to start a round.</p><button type="button" id="resetFilters" class="primary">Show all topics and levels</button></section>
-    <footer><p id="scopeNote">Practice from your supplied ID1206 materials.</p><details><summary>About this question bank</summary><p>Questions cover only the topics in the supplied lectures, notes, and study images. The quiz screenshots guide the difficulty: recall, comparisons, calculations, and short code traces. This is a study set, not a complete exam syllabus.</p><p>Every answer includes a source filename and PDF page reference. “Application” questions apply the supplied concepts to fresh examples. All calculations use the assumptions stated in the question. No progress is sent to a server.</p><ul id="sourceList"></ul></details></footer>
+    <section id="emptyPanel" class="summary-card" hidden><h2>No questions in this selection</h2><p>Choose one or more topics, or change the level or question type to start a round.</p><button type="button" id="resetFilters" class="primary">Show all topics and levels</button></section>
+    <footer><p id="scopeNote">Practice from your supplied ID1206 materials.</p><details><summary>About this question bank</summary><p>Questions cover only the topics in the supplied lectures, notes, and study images. The quiz screenshots guide the difficulty: recall, comparisons, calculations, and short code traces. This is a study set, not a complete exam syllabus.</p><p>Each answer links to its source PDF at the cited page, opening in a new tab so you can keep your place. “Application” questions apply the supplied concepts to fresh examples. All calculations use the assumptions stated in the question. No progress is sent to a server.</p><ul id="sourceList"></ul></details></footer>
     <noscript><p class="feedback">Enable JavaScript to use flashcards and quizzes.</p></noscript>
   </main>
 </body>
