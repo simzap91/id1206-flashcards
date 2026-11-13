@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#f6f7fb" />
+  <title>Flashcards</title>
+  <style>
+    :root { color-scheme: light; --ink:#22283a; --muted:#747b8c; --border:#e4e7f0; --accent:#4d5bd3; --bg:#f6f7fb; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; background:var(--bg); color:var(--ink); font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; display:grid; place-items:center; padding:24px; }
+    main { width:min(100%,620px); }
+    header { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:26px; }
+    h1 { margin:0; font-size:26px; letter-spacing:-.9px; font-weight:750; }
+    .subtitle { margin:5px 0 0; color:var(--muted); font-size:14px; }
+    .tag { color:var(--accent); border:1px solid #dce0fb; background:#eef0ff; padding:8px 12px; border-radius:99px; font-size:12px; font-weight:650; white-space:nowrap; }
+    .flashcard { width:100%; min-height:320px; background:#fff; border:1px solid var(--border); border-radius:22px; box-shadow:0 14px 38px rgba(35,43,72,.055); padding:36px 34px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:20px; text-align:center; cursor:pointer; transition:box-shadow .18s,transform .18s; }
+    .flashcard:hover { box-shadow:0 17px 44px rgba(35,43,72,.09); transform:translateY(-2px); }
+    .flashcard:focus-visible,button:focus-visible { outline:3px solid #9ca5ff; outline-offset:4px; }
+    .eyebrow { font-size:12px; text-transform:uppercase; letter-spacing:2px; font-weight:750; color:var(--accent); }
+    .content { font-size:clamp(21px,4.5vw,29px); letter-spacing:-.65px; font-weight:650; line-height:1.4; overflow-wrap:anywhere; white-space:pre-wrap; }
+    .hint { font-size:13px; color:#9499a7; }
+    .controls { display:flex; gap:12px; margin-top:18px; }
+    button { font:inherit; font-weight:650; font-size:15px; border-radius:12px; border:1px solid var(--border); padding:16px 20px; cursor:pointer; transition:background .15s,transform .15s; }
+    button:active { transform:scale(.98); }
+    .secondary { background:white; color:var(--ink); flex:1; }
+    .secondary:hover { background:#fdfdff; }
+    .primary { background:var(--accent); color:white; border-color:var(--accent); flex:1; }
+    .primary:hover { background:#3c49c1; }
+    footer { text-align:center; margin-top:23px; color:var(--muted); font-size:12px; line-height:1.8; }
+    kbd { font:inherit; background:#e9ebf2; padding:2px 6px; border-radius:5px; color:#555d70; }
+    @media(max-width:420px) { .flashcard { min-height:290px; padding:27px 22px; } .controls button { padding:15px 10px; } }
+    @media(prefers-reduced-motion:reduce) { * { transition:none!important; } }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <h1>Flashcards</h1>
+        <p class="subtitle">A simple way to practice what you know.</p>
+      </div>
+      <span class="tag" id="deckSize" aria-live="polite"></span>
+    </header>
+
+    <div id="card" class="flashcard" role="button" tabindex="0" aria-label="Flashcard. Click to reveal the answer.">
+      <span id="sideLabel" class="eyebrow">Question</span>
+      <div id="cardText" class="content"></div>
+      <span id="hint" class="hint">Click the card to reveal the answer</span>
+    </div>
+
+    <div class="controls">
+      <button id="flipButton" class="secondary" type="button">Show answer</button>
+      <button id="nextButton" class="primary" type="button">Next question →</button>
+    </div>
+    <footer>Press <kbd>Space</kbd> to flip · <kbd>→</kbd> for next question<br />Questions are drawn randomly without repeating until the deck resets.</footer>
+  </main>
+
+  <script>
+    // =============================================================
+    // EDIT YOUR QUESTION BANK HERE.
+    // Add, remove, or change { question: "...", answer: "..." } entries.
+    // =============================================================
+    const QUESTION_BANK = [
+      { question: "What does CPU stand for?", answer: "Central Processing Unit." },
+      { question: "What is the time complexity of binary search?", answer: "O(log n), assuming sorted input." },
+      { question: "What does RAM stand for?", answer: "Random Access Memory." },
+      { question: "What is a process in an operating system?", answer: "A program that is currently executing." },
+      { question: "What is overfitting in machine learning?", answer: "When a model learns training-specific patterns and performs poorly on new data." },
+      { question: "What does CNN stand for in machine learning?", answer: "Convolutional Neural Network." }
+    ];
+    // =============================================================
+
+    const card = document.getElementById('card');
+    const cardText = document.getElementById('cardText');
+    const sideLabel = document.getElementById('sideLabel');
+    const hint = document.getElementById('hint');
+    const flipButton = document.getElementById('flipButton');
+    const nextButton = document.getElementById('nextButton');
+    const deckSize = document.getElementById('deckSize');
+
+    let shuffledIndices = [];
+    let currentIndex = -1;
+    let showingAnswer = false;
+    let previousIndex = -1;
+
+    // Fisher–Yates shuffle. Ensures every question appears once per cycle.
+    function newShuffle() {
+      shuffledIndices = QUESTION_BANK.map((_, index) => index);
+      for (let i = shuffledIndices.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffledIndices[i], shuffledIndices[j]] = [shuffledIndices[j], shuffledIndices[i]];
+      }
+      // Avoid showing the same card twice across a shuffle boundary.
+      if (shuffledIndices.length > 1 && shuffledIndices[shuffledIndices.length - 1] === previousIndex) {
+        [shuffledIndices[shuffledIndices.length - 1], shuffledIndices[0]] = [shuffledIndices[0], shuffledIndices[shuffledIndices.length - 1]];
+      }
+    }
+
+    function render() {
+      const entry = QUESTION_BANK[currentIndex];
+      if (!entry) {
+        cardText.textContent = 'Add some questions to QUESTION_BANK to get started.';
+        sideLabel.textContent = 'Empty deck';
+        hint.textContent = '';
+        flipButton.disabled = true;
+        nextButton.disabled = true;
+        return;
+      }
+      cardText.textContent = showingAnswer ? entry.answer : entry.question;
+      sideLabel.textContent = showingAnswer ? 'Answer' : 'Question';
+      hint.textContent = showingAnswer ? 'Click to see the question again' : 'Click the card to reveal the answer';
+      flipButton.textContent = showingAnswer ? 'Show question' : 'Show answer';
+      card.setAttribute('aria-label', showingAnswer ? 'Answer. Click to show question.' : 'Question. Click to reveal answer.');
+    }
+
+    function nextCard() {
+      if (!QUESTION_BANK.length) return;
+      if (!shuffledIndices.length) newShuffle();
+      currentIndex = shuffledIndices.pop();
+      previousIndex = currentIndex;
+      showingAnswer = false;
+      render();
+    }
+
+    function flipCard() {
+      if (currentIndex < 0) return;
+      showingAnswer = !showingAnswer;
+      render();
+    }
+
+    card.addEventListener('click', flipCard);
+    card.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') { event.preventDefault(); flipCard(); }
+    });
+    flipButton.addEventListener('click', flipCard);
+    nextButton.addEventListener('click', nextCard);
+    document.addEventListener('keydown', (event) => {
+      if (event.repeat || event.altKey || event.ctrlKey || event.metaKey) return;
+      if (event.key === ' ' && event.target.tagName !== 'BUTTON') { event.preventDefault(); flipCard(); }
+      if (event.key === 'ArrowRight') { event.preventDefault(); nextCard(); }
+    });
+
+    deckSize.textContent = `${QUESTION_BANK.length} ${QUESTION_BANK.length === 1 ? 'card' : 'cards'}`;
+    nextCard();
+  </script>
+</body>
+</html>
